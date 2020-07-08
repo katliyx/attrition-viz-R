@@ -1,0 +1,449 @@
+---
+title: "Assignment 1"
+author: 'Katherine Li'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+```
+
+# Bronze Tier
+Each task is worth 2 points.
+
+## Task 1
+Use the attrition data from the rsample package.
+```{r}
+library(rsample)
+
+data("attrition")
+```
+
+Engage in some data exploration by using `summary` functions.
+
+In addition to the `summary` function, the `describe` functions from the psych and Hmisc packages are great (but for slightly different purposes). Use any function you wish.
+
+*(1) Use the summary function. From the results, we could see all the variables included in the dataset listed out. For the numeric ones, we could see the minimums, 1st quartile values, medians, 3rd quartile values, maximums, and means. For the categorical variables, we could see the levels/classes included.*
+```{r}
+
+summary(attrition)
+
+```
+
+*(2) Now use the describe function from the package "Hmisc". From this result, for numeric variables, we could see information like the lowest and highest values, the mean, if there is any missing value, and etc. For variables of the data type factor, we could see information like the proportions and frequencies of the included levels/classes, if there is any missing value, and etc.*
+```{r}
+
+# Load the required library.
+library(Hmisc)
+
+# Explore the data.
+describe(attrition)
+
+```
+
+*(3) Now use the describe function included in the package "psych". From the result, we could see things like the means, standard deviations, and medians of the 31 variables respectively.*
+```{r}
+
+# Load revelant library.
+library(psych)
+
+# Explore the data using relevant function.
+psych::describe(attrition)
+
+```
+
+## Task 2
+How do those variables look? Do they appear to all make sense? Are there any extreme values? Are any of them coded in such a way that don't make sense? Discuss anything interesting that you found.
+
+Be sure to use the `str` function or the `glimpse` function from dplyr to check the structure of the data.
+
+*(1) By using the str function, we could see the information such as the data types of the variables - we have types that include factor, ordered factor, and integer. For those variables of type factor and ordered factor, we could see how many levels are included in each of them.*
+```{r}
+
+# Use the str function. 
+str(attrition)
+
+```
+
+*(2) Then, use the glimpse function. The results basically looks similiar to the ones generated from the str function, except for the data of type ordered factor and factor, the result down below does not show the numbers of levels.*
+```{r}
+
+# Load relevant library.
+library(dplyr)
+
+# Use the glimpse function.
+glimpse(attrition) 
+
+```
+
+*To conclude the data exploration process, I think most of the dataset looks rational concerning with in-real-life intuitions. However, I spot some points that might need attention and further inspection: firstly, the data types for variables for job level and stock option level should be factors instead of integers. Secondly, the first two levels under the variable performance rating appear to be zeros, which might not make sense, but more information would be needed to determine if this data distribution is correctly recorded. Thirdly, for variable attrition, the ones labeled as "no" take up about 83.9% of the whole dataset, which might cause certain problems in the future endeavor of utilizing data. While for the variable business travel, approximately 71% of the data included marked this variable as "travel_rarely". As for the extreme values, I have not seen any so far, solely from looking at the results generated above.*
+
+
+## Task 3
+Pick at least 3 variables for which you want to explore relationships. Given any issues you found in Task 2, convert variables as needed with `as.factor` (forces a variable into a factor -- think about a nominal variable), `as.numeric` (forces a variable into a numeric), or anything else that you deem necessary (e.g., create new variables with `mutate`). 
+
+*Data pre-processing.*
+```{r}
+attrition1 <- attrition %>%
+  mutate(JobLevel = as.factor(JobLevel)) %>%
+  mutate(StockOptionLevel = as.factor(StockOptionLevel))
+```
+
+**Select variables that include job level, education, job satisfaction, monthly income, and gender. Explore if there is any relationship between them.**
+
+
+## Task 4
+Using the ggplot2 package, create some visualizations. If you want to add some type of grouped function (by color, for instance), you might do something like this: ggplot(yourData, aes(x = variableOnX, y = variableOnY, color = variableToColor)) + geom_point(). 
+
+Once you have produced a visualization, explain what it means. Naturally, good viz doesn't need explanation, but let's do it regardless!
+
+**Visualization 1:**
+*This boxplot shows the relationship between the education and the monthly income, while the former is a categorical variable and the latter is a numeric variable. From the result, we could see that in general, the median monthly income for the five levels of ordered factor "education" increases accrodingly. For instance, the median monthly income for those who have obtained doctor degrees is higher than the median income for those who have obtained master degrees. Observations like this comply with real life situations. However, one inconsistent gap, judged from intuition, is that the median monthly income for those who have obtained a bachelor degree is slightly smaller than the median monthly income for those who have obtained a college degree. This might be due to the reason that in this specific company, when it comes to monthly income, there might not be that much substantial difference between having a college degree and having a bachelor degree.*
+```{r}
+
+# Load relevant library. 
+library(ggplot2)
+
+# Plot.
+ggplot(attrition1, aes(group = Education, x = Education, y = MonthlyIncome)) +
+  geom_boxplot()
+
+```
+
+**Visualization 2:**
+*Now explore the relationship between variables education and job satisfaction, which are both categorical variables. From the graph down below, we could see that within the groups for those with bachelor degrees and doctor degrees, the distributions of different levels of job satisfaction are quite even. While for those who have below-college degrees, they tend to either have high job satisfaction or low job satisfaction. And for employees with college degrees and master degrees, they tend to have higher job satisfaction.*
+```{r}
+
+# Plot.
+ggplot(attrition1, aes(x = Education, y = JobSatisfaction), fill = JobSatisfaction) + 
+         geom_count(color = "#003366") + 
+         theme_bw()
+
+```
+
+**Visualization 3:** 
+*Now explore the relationship between job level and education, which are both categorical factors, once again. From the graph, we could see that within the below college group, those who are at job level 1 take up the most of the group, which is more than a half. Job level 1 also take up most of the data included in group bachelor, but the "domination" is not as pronounced as the one observed in group below college. While for groups college, master, and doctor, job level 2 take up the biggest proportion of all the data included in these aforementioned groups. One interesting finding from the graph is that no matter what group it is, job level 5 takes up about the same proportion of the data within each group.*
+```{r}
+
+# Load required package. 
+library(ggmosaic)
+library(vcd)
+
+# Plot.
+mosaic(JobLevel ~ Education, data = attrition1)
+
+```
+
+**Visualization 4:**
+*Now I want to explore about the relationship between job level and job satisfaction, which are two categorical variables. We could see some interesting possible "pattern" from the graph: within the groups of job level 1 and 2, employees tend to have either high (/very high) or low job satisfaction. While this pattern starts to diminish and fade as the job level increases. Within the group of job level 3, we could still see that employees tend to have either high (/very high) or low job satisfaction. However, as we move onto group of job level 4, this pattern is not really obvious. Within the group of job level 5, more employees have medium to high job satisfaction.*
+```{r}
+
+# Plot. 
+ggplot(attrition1, aes(x = JobLevel, y = JobSatisfaction), fill = JobSatisfaction) + 
+         geom_count(color = "#003366") + 
+         theme_bw()
+
+```
+
+**Visualization 5:** 
+*Finally, I am also intrigued to find out more about the relationship between job satisfaction and gender. Since both are categorical variables with small numbers of levels, I use the graph down below as my choice of plot. We could see that in general, male employees have a higher proportion of very high job satisfaction; while female employees have higher proportions of low, medium and high job satisfaction.*
+```{r}
+
+# Plot.
+mosaic(JobSatisfaction ~ Gender, data = attrition1)
+
+```
+
+
+## Task 5
+Use the `simViz` function from inferviz to see how well you actually do in finding an actual relationship. First, pick two new variables for relationship exploration -- make sure that you have not seen them before. When you run it the first time, keep the distractors argument at the default value. When asked if you want to see the real data select 1 (No). Now try it with more distractors (maybe 5 or 6).
+
+How did you do? Where you able to spot the real relationship or were you fooled by your basic human need for pattern finding? Discuss what you think this means.
+
+**Pick age and the monthy income as the two variables.** 
+
+*(1) To see the real data, first set the distractor as 1. Or use the basic plotting method to get the graph. From the results generated by both methods, we could detect a certain pattern: monthly income increases as years at company increases. Now move onto our further exploration with package inferviz.*
+```{r}
+# Load required package.
+library(inferviz)
+
+# Plot, with distractors set at 1.
+simViz(attrition1, MonthlyIncome, Age, distractors = 1, answer = FALSE)
+
+# Plot, with basic plotting method.
+ggplot(attrition1, aes(x = MonthlyIncome, y = YearsAtCompany))+
+  geom_point()+
+  theme_classic()
+
+```
+
+*(2) Set the distractors to 3. From the graph on the upper right side, there is a rather apparent positive relationship between the two variables.*
+```{r}
+
+# Plot, with distractors set at 3.
+simViz(attrition1, MonthlyIncome, YearsAtCompany, distractors = 3, answer = FALSE)
+
+```
+
+*(3) Now set the distractors to 6 and continue the exploration. From the first graph from top to bottom on the right side, we could see a similar positive relationship between the age and monthly income shown. As the number of distractors increases, we could still spot the actual relationship. This indicates that there exists a real pattern of the relationship between my two variables.*
+```{r}
+
+# Plot, with distractors set at 3.
+simViz(attrition1, MonthlyIncome, YearsAtCompany, distractors = 6, answer = FALSE)
+
+```
+
+
+
+# Silver Tier
+
+For up to 4 points, use the leadershipRatingsAgreement.csv file in the data folder. You can use any of the following functions to read a csv file into R (from slow to fast):
+```{r}
+
+#read.csv("path/to/your/file.csv")
+#readr::read_csv("path/to/your/file.csv")
+
+# Read data. 
+leadership <- data.table::fread("leadershipRatingsAgreement.csv")
+
+# Get a basic idea of the data.
+str(leadership)
+
+```
+
+From the following summary table, we could see that there are plenty NA's, which might need to be dealt with in further endeavors. 
+```{r}
+
+summary(leadership)
+
+```
+
+Which variables have the strongest positive relationship and which have the strongest negative relationship? 
+
+*First, compute the correlationship table.* 
+```{r}
+
+# First get rid of missing values in the dataset. 
+leadership1 <- na.omit(leadership)
+
+# Second ger rid of the variables that are not necessarily useful.
+leadership1 <- leadership1 %>%
+  select(-leaderID)
+
+# Now get the correlation table. 
+corrleadership <- round(cor(leadership1), 3)
+head(corrleadership)
+
+```
+
+*Second, plot the correlation graph. We could see that vitality and productivity have the strongest positive relationship (rounded to 0.656), while the vitality and effect have the strongest negative relationship (rounded to -0.214).*
+```{r}
+
+# Load required package.
+library(corrplot)
+
+# Load color palette package. 
+library(wesanderson)
+
+# Load in color.
+col1 <- wes_palette("Darjeeling2")
+
+# Plot. 
+corrplot(corrleadership, method = "color", col = col1, type = "upper", order = "hclust", addCoef.col = "white", tl.col = "black", tl.srt = 45, sig.level = 0.01, insig = "blank", diag = FALSE)
+
+```
+
+Once you have found those relationships, plot them both.
+
+**(1-1) Vitality vs. Productivity - strongest positive relationship.**
+*With smoothing.*
+```{r}
+
+# Plot.
+ggplot(leadership1, aes(x = vitality, y = productivity)) + 
+  geom_smooth(color = "darkgreen") + 
+  theme_classic()
+
+```
+
+**(1-2) Vitality vs. Productivity - strongest positive relationship.**
+*With points plotted out.*
+```{r}
+
+# Plot.
+ggplot(leadership1, aes(x = vitality, y = productivity)) +
+  geom_point() +
+  geom_smooth(se=FALSE)
+
+```
+ 
+**(2) Vitality vs. Effect - strongest negative relationship.**
+*Wtih smoothing.*
+```{r}
+
+# Plot.
+ggplot(leadership1, aes(x = vitality, y = effect)) + 
+  geom_smooth(color = "darkred") + 
+  theme_classic()
+
+```
+
+**(2-2) Vitality vs. Effect - strongest negative relationship.**
+*With points plotted out.*
+```{r}
+
+# Plot.
+ggplot(leadership1, aes(x = vitality, y = effect)) +
+  geom_point() +
+  geom_smooth(se=FALSE)
+
+```
+
+Which 4 variables have the strongest relationship with the effect variable? Explain how you found this relationship. Produce plots for each of those relationships and include both linear trend lines and smoothed trend lines.  
+
+*For this problem, we could refer back to correlation matrix and correlation plot. Based on the absolute value of the respective correlation coefficients , we could see that the 4 variables which have the strongest relationships with the effect variables include: forceful, enabling, strategic, and operational. Now the plots are as follows. Linear trend lines are in red; smoothed trend lines are in blue.*
+
+**Plot 1: effect vs. forceful.**
+*Positive relationship.*
+```{r}
+
+#Plot.
+ggplot(leadership1, aes(x = forceful, y = effect)) +
+  geom_point() +
+  geom_smooth(method = lm, color = "red") +
+  geom_smooth(color = "blue") +
+  theme_classic()
+
+```
+
+**Plot 2: effect vs. enabling.**
+*Positive relationship.*
+```{r}
+
+#Plot.
+ggplot(leadership1, aes(x = enabling, y = effect)) +
+  geom_point() +
+  geom_smooth(method = lm, color = "red") +
+  geom_smooth(color = "blue") +
+  theme_classic()
+
+```
+
+**Plot 3: effect vs. strategic.**
+*Positive relationship.*
+```{r}
+
+#Plot.
+ggplot(leadership1, aes(x = strategic, y = effect)) +
+  geom_point() +
+  geom_smooth(method = lm, color = "red") +
+  geom_smooth(color = "blue") +
+  theme_classic()
+
+```
+
+**Plot 4: effect vs. operational.**
+*Positive relationship.*
+```{r}
+
+#Plot.
+ggplot(leadership1, aes(x = operational, y = effect)) +
+  geom_point() +
+  geom_smooth(method = lm, color = "red") +
+  geom_smooth(color = "blue") +
+  theme_classic()
+
+```
+
+**Collected plots.**
+*Arrange these four graphs altogether, and see if it is possible to compare through the collected visualization. Some observations are: the lines for forceful vs. effect is flatter than the lines for enabling vs. effect; the linear trend line for strategic vs. effect is steeper than the linear trend line for forceful vs. effect; and etc. Since the four plots are plotted on different scales - certian alteration might be needed to have more effective and direct comparisons.*
+```{r}
+
+a <- leadership1 %>%
+  ggplot(mapping = aes(x = forceful, y = effect))+
+  geom_smooth(method = lm, color = "red")+
+  geom_smooth(color = "cornflowerblue")+
+  theme_classic()
+
+b <- leadership1 %>%
+  ggplot(mapping = aes(x = enabling, y = effect))+
+  geom_smooth(method = lm, color = "red")+
+  geom_smooth(color = "cornflowerblue")+
+  theme_classic()
+
+c <- leadership1 %>%
+  ggplot(mapping = aes(x = strategic, y = effect))+
+  geom_smooth(method = lm, color = "red")+
+  geom_smooth(color = "cornflowerblue")+
+  theme_classic()
+
+d <- leadership1 %>%
+  ggplot(mapping = aes(x = operational, y = effect))+
+  geom_smooth(method = lm, color = "red")+
+  geom_smooth(color = "cornflowerblue")+
+  theme_classic()
+
+multiplot(a, b, c, d, cols = 2)
+
+```
+
+
+# Gold Tier
+For up to 6 points, use the leadership data found in the data folder. This is a .dta file (from Stata) and can be read in using the appropriate function from the haven package. 
+```{r}
+
+lead <- haven::read_dta("leadership")
+
+```
+
+Using verbs from the dplyr package (specifically, `group_by` and `summarize`), find the *effect* mean for each leaderID. Which leader(s) had the highest effect mean and which leader(s) had the lowest effect mean. 
+
+*From the results, we could see leaderID 1644, 2507, and 8467 have the highest effect mean. LeaderID 1589 has the lowest effect mean.*
+```{r}
+
+# Compute and summarize the effect means for each leaderID.
+lead %>%
+  group_by(leaderID) %>%
+  summarise(mean = round(mean(effect), 2)) 
+
+# Find the leader(s) with the highest effect mean. 
+lead %>%
+  group_by(leaderID) %>%
+  summarise(mean = round(mean(effect), 2)) %>%
+  arrange(desc(mean))
+  
+
+# Find the leader(s) with the lowest effect mean. 
+lead %>%
+  group_by(leaderID) %>%
+  summarise(mean = round(mean(effect), 2)) %>%
+  arrange(mean)
+
+```
+
+Take your highest and lowest leaders and keep the leaderID. With the leaderID in hand, find those leaders in the leadershipRatingsAgreement data.
+
+*Highest Leader IDs: 1644, 2507, and 8467. Lowest Leader IDs: 1589.*
+```{r}
+
+# Extract the 4 leaders from the leadershipRatingsAgreement data.
+MaxMinMean <- leadership %>%
+  filter(leaderID == 8467 | leaderID == 2507 | leaderID == 1644 | leaderID == 1589)
+
+```
+
+Excluding effect, construct a plot with forceful, enabling, strategic, operational, vitality, and productivity on the x-axis (the y-axis will contain the value for each variable). Next color the points by leaderID.
+
+*Plot.*
+```{r}
+
+# Plot.
+MaxMinMean %>%
+  gather(key = "Characteristic", value = "Rating", -leaderID, -effect) %>%
+  mutate(leaderID = as.factor(leaderID)) %>%
+  ggplot(mapping = aes (x = Characteristic, y = Rating, color = leaderID)) +
+  geom_point() +
+  ggtitle("Rating Across Leadership Characteristics") +
+  theme_bw()
+
+```
